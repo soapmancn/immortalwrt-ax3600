@@ -22,15 +22,27 @@ jobs:
         git fetch upstream
         git merge upstream/master
 
+    - name: Check Sync Status
+      id: sync_status
+      if: github.event_name == 'schedule'
+      run: |
+        if git diff --quiet HEAD^ HEAD; then
+          echo "No changes after merge."
+          echo "has_changes=false" >> $GITHUB_OUTPUT
+        else
+          echo "Changes detected after merge."
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+        fi
+
     - name: Push changes if any
-      if: steps.check_changes.outputs.has_changes == 'true'
+      if: github.event_name == 'schedule' && steps.sync_status.outputs.has_changes == 'true'
       run: |
         git config user.name github-actions
         git config user.email github-actions@github.com
         git push
 
     - name: Prepare Build Environment
-      if: steps.check_changes.outputs.has_changes == 'true'
+      if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && steps.sync_status.outputs.has_changes == 'true')
       run: |
         sudo apt update
         sudo apt install -y build-essential clang flex bison g++ gawk 
@@ -38,13 +50,13 @@ jobs:
         python3-distutils rsync unzip zlib1g-dev file wget subversion
 
     - name: Download and Install Feeds
-      if: steps.check_changes.outputs.has_changes == 'true'
+      if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && steps.sync_status.outputs.has_changes == 'true')
       run: |
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
     - name: Load Custom .config
-      if: steps.check_changes.outputs.has_changes == 'true'
+      if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && steps.sync_status.outputs.has_changes == 'true')
       run: |
         # Ensure your custom .config file is in the root of your repository
         # For example, if your custom config is named 'my_router_config'
@@ -55,12 +67,12 @@ jobs:
         # make defconfig
 
     - name: Compile Firmware
-      if: steps.check_changes.outputs.has_changes == 'true'
+      if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && steps.sync_status.outputs.has_changes == 'true')
       run: |
         make -j$(nproc) V=s
 
     - name: Upload Firmware to Release
-      if: steps.check_changes.outputs.has_changes == 'true'
+      if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && steps.sync_status.outputs.has_changes == 'true')
       uses: softprops/action-gh-release@v1
       with:
         files: | 
