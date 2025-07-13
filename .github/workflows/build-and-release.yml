@@ -65,6 +65,12 @@ jobs:
         # If you don't have a custom config, you can run 'make defconfig' instead
         # make defconfig
 
+    - name: Clean up APT cache
+      if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && steps.sync_status.outputs.has_changes == 'true')
+      run: |
+        sudo apt clean
+        sudo rm -rf /var/lib/apt/lists/*
+
     - name: Compile Firmware
       if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && steps.sync_status.outputs.has_changes == 'true')
       run: |
