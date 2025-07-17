@@ -20,7 +20,7 @@ jobs:
       run: |
         git remote add upstream https://github.com/VIKINGYFY/immortalwrt.git
         git fetch upstream
-        git merge upstream/master
+        git merge upstream/main
 
     - name: Check Sync Status
       id: sync_status
