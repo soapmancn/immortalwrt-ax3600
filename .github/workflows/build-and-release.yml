@@ -84,7 +84,7 @@ jobs:
     - name: Compile Firmware
       if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && steps.sync_status.outputs.has_changes == 'true')
       run: |
-        make -j$(nproc) V=s
+        make -j2 V=s
 
     - name: Upload Firmware to Release
       if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && steps.sync_status.outputs.has_changes == 'true')
