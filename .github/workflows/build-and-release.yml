@@ -20,6 +20,15 @@ jobs:
         large-packages: true
         swap-storage: true
         
+    - name: 释放更多磁盘空间
+      run: |
+        sudo rm -rf /opt/hostedtoolcache
+        sudo rm -rf /usr/share/dotnet
+        sudo rm -rf /usr/local/lib/android
+        sudo rm -rf /opt/ghc
+        sudo apt clean
+        df -h
+        
     - name: Checkout Repository
       uses: actions/checkout@v4
       with:
@@ -59,11 +68,18 @@ jobs:
         path: |
           ~/.ccache
           dl/
-          staging_dir/
-          build_dir/
-        key: ${{ runner.os }}-openwrt-${{ hashFiles('**/Makefile', '**/Config.in') }}
+        key: ${{ runner.os }}-openwrt-dl-${{ hashFiles('**/Makefile', '**/Config.in') }}
         restore-keys: |
-          ${{ runner.os }}-openwrt-
+          ${{ runner.os }}-openwrt-dl-
+          
+    - name: 缓存编译目录
+      uses: actions/cache@v4
+      with:
+        path: |
+          staging_dir/
+        key: ${{ runner.os }}-openwrt-staging-${{ hashFiles('**/Makefile', '**/Config.in') }}
+        restore-keys: |
+          ${{ runner.os }}-openwrt-staging-
           
     - name: Prepare Build Environment
       if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && steps.sync_status.outputs.has_changes == 'true')
@@ -88,16 +104,46 @@ jobs:
         echo "CONFIG_CCACHE=y" >> .config
         make defconfig
         
+    - name: 检查编译前磁盘空间
+      if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && steps.sync_status.outputs.has_changes == 'true')
+      run: |
+        echo "编译前磁盘空间状态："
+        df -h
+        
     - name: Compile Firmware
       if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && steps.sync_status.outputs.has_changes == 'true')
       timeout-minutes: 360
       run: |
         make -j$(nproc) download
+        # 定期清理临时文件
+        find /tmp -type f -name "*.o" -delete || true
         make -j$(nproc) || {
           echo "并行编译失败，尝试单线程编译..."
+          # 清理部分编译文件以释放空间
+          find build_dir -name "*.o" -type f -delete || true
           make -j1 V=s
         }
+        # 编译完成后检查磁盘空间
+        echo "编译后磁盘空间状态："
+        df -h
 
+    - name: 准备上传固件
+      if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && steps.sync_status.outputs.has_changes == 'true')
+      run: |
+        # 清理不必要的文件以释放空间
+        rm -rf $(find ./build_dir -name "*.o")
+        rm -rf $(find ./build_dir -name "*.d")
+        # 检查要上传的文件
+        find bin/targets -type f -name "*.bin" -o -name "*.elf" -o -name "*.img" -o -name "*.manifest" | sort
+        # 检查磁盘空间
+        echo "上传前磁盘空间状态："
+        df -h
+        
+    - name: Get current time
+      id: current_time
+      if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && steps.sync_status.outputs.has_changes == 'true')
+      run: echo "time=$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
+        
     - name: Upload Firmware to Release
       if: github.event_name == 'workflow_dispatch' || (github.event_name == 'schedule' && steps.sync_status.outputs.has_changes == 'true')
       uses: softprops/action-gh-release@v1
@@ -107,8 +153,8 @@ jobs:
           bin/targets/*/*/*.elf
           bin/targets/*/*/*.img
           bin/targets/*/*/*.manifest
-        name: ImmortalWrt Firmware Build ${{ github.ref_name }}-${{ github.run_number }}
-        tag_name: build-${{ github.run_number }}
+        name: ImmortalWrt XiaoMi Ax3600 ${{ github.ref_name }}-${{ steps.current_time.outputs.time }}
+        tag_name: build-${{ steps.current_time.outputs.time }}
         prerelease: false
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
