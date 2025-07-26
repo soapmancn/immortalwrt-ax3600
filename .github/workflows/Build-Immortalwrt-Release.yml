@@ -14,14 +14,15 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - name: Clean disk space before build
-        run: |
-          echo "Cleaning disk space before building immortalwrt firmware..."
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache /opt/pipx /opt/az /opt/microsoft /opt/runner /opt/hostedtoolcache /opt/hostedtoolcache/Python /opt/hostedtoolcache/go /opt/hostedtoolcache/node /opt/hostedtoolcache/Ruby /opt/hostedtoolcache/Java /opt/hostedtoolcache/CodeQL /opt/hostedtoolcache/Swift /opt/hostedtoolcache/PowerShell /opt/hostedtoolcache/Scala /opt/hostedtoolcache/Mono /opt/hostedtoolcache/Perl /opt/hostedtoolcache/Crystal /opt/hostedtoolcache/Elixir /opt/hostedtoolcache/Erlang /opt/hostedtoolcache/Haskell /opt/hostedtoolcache/Julia /opt/hostedtoolcache/Kotlin /opt/hostedtoolcache/OCaml /opt/hostedtoolcache/Php /opt/hostedtoolcache/Rust /opt/hostedtoolcache/Sbt /opt/hostedtoolcache/TypeScript /opt/hostedtoolcache/Vlang /opt/hostedtoolcache/Zig || true
-          sudo apt-get clean
-          sudo apt-get autoremove -y
-          df -h
-          echo "Disk space cleaned."
+      - name: free-disk-space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
 
       - name: Checkout code
         uses: actions/checkout@v3
