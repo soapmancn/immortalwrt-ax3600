@@ -32,6 +32,9 @@ jobs:
       - name: Build immortalwrt firmware
         run: |
           echo "Start building immortalwrt firmware..."
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+          make defconfig
           make download -j$(nproc)
           make -j$(nproc)
           echo "Build finished."
