@@ -30,6 +30,22 @@ jobs:
           fetch-depth: 1
           ref: ${{ github.ref }}
 
+      - name: Cache dl directory
+        uses: actions/cache@v3
+        with:
+          path: dl
+          key: dl-${{ runner.os }}-${{ hashFiles('config/myconfig') }}
+          restore-keys: |
+            dl-${{ runner.os }}-
+
+      - name: Cache build_dir
+        uses: actions/cache@v3
+        with:
+          path: build_dir
+          key: build_dir-${{ runner.os }}-${{ hashFiles('config/myconfig') }}
+          restore-keys: |
+            build_dir-${{ runner.os }}-
+
       - name: Install build dependencies
         run: |
           sudo apt update -y
@@ -42,6 +58,12 @@ jobs:
             ninja-build p7zip p7zip-full patch pkgconf python3 python3-pip python3-ply python3-docutils \
             python3-pyelftools qemu-utils re2c rsync scons squashfs-tools subversion swig texinfo uglifyjs \
             upx-ucl unzip vim wget xmlto xxd zlib1g-dev zstd
+
+      - name: Setup ccache
+        run: |
+          echo 'export CC="ccache gcc"' >> $GITHUB_ENV
+          echo 'export CXX="ccache g++"' >> $GITHUB_ENV
+          echo 'export PATH="/usr/lib/ccache:$PATH"' >> $GITHUB_ENV
 
       - name: Build immortalwrt firmware
         run: |
