@@ -33,7 +33,6 @@ jobs:
       - name: Sync upstream
         run: |
           git remote add upstream https://github.com/VIKINGYFY/immortalwrt.git
-          git fetch upstream
           git config pull.rebase true
           git pull upstream master --rebase
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:master
