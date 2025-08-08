@@ -35,8 +35,11 @@ jobs:
           git config --global user.email "soapmans@icloud.com"
           git config --global user.name "soapmancn"
           git remote add upstream https://github.com/VIKINGYFY/immortalwrt.git
-          git config pull.rebase true
-          git pull upstream main --rebase
+          git remote add origin https://github.com/${{ github.repository }}.git
+          git fetch origin main
+          git checkout main
+          git reset --hard origin/main
+          git pull upstream main --rebase          
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
 
       - name: Cache dl directory
