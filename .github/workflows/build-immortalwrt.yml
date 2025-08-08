@@ -30,17 +30,6 @@ jobs:
           fetch-depth: 1
           ref: ${{ github.ref }}
 
-      - name: Sync upstream
-        run: |
-          git config --global user.email "soapmans@icloud.com"
-          git config --global user.name "soapmancn"
-          git remote add upstream https://github.com/VIKINGYFY/immortalwrt.git
-          git fetch origin main
-          git checkout main
-          git reset --hard origin/main
-          git pull upstream main --rebase          
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
-
       - name: Cache dl directory
         uses: actions/cache@v3
         with:
