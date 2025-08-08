@@ -1,0 +1,50 @@
+name: build-immortalwrt
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 0 * * 0
+
+env:
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+permissions: write-all
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: free-disk-space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+          ref: ${{ github.ref }}
+
+      - name: Build immortalwrt firmware
+        run: |
+          echo "Start building immortalwrt firmware..."
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+          cp config/myconfig .config
+          make defconfig
+          sed -i "s/192.168.1.1/192.168.5.1/g" package/base-files/files/bin/config_generate
+          make download -j$(nproc)
+          make -j1 V=s
+          echo "Build finished."
+
+      - name: Upload firmware to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "bin/targets/**/*.bin"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
