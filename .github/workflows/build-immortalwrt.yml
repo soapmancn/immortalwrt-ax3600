@@ -32,6 +32,8 @@ jobs:
 
       - name: Sync upstream
         run: |
+          git config --global user.email "soapmans@icloud.com"
+          git config --global user.name "soapmancn"
           git remote add upstream https://github.com/VIKINGYFY/immortalwrt.git
           git config pull.rebase true
           git pull upstream main --rebase
@@ -91,3 +93,4 @@ jobs:
         env:
 
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
