@@ -34,8 +34,8 @@ jobs:
         run: |
           git remote add upstream https://github.com/VIKINGYFY/immortalwrt.git
           git config pull.rebase true
-          git pull upstream master --rebase
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:master
+          git pull upstream main --rebase
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
 
       - name: Cache dl directory
         uses: actions/cache@v3
@@ -89,4 +89,5 @@ jobs:
         with:
           files: "bin/targets/**/*.bin"
         env:
+
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
