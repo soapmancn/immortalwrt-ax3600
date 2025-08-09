@@ -76,13 +76,19 @@ jobs:
           make download -j$(nproc)
           make V=s
           echo "Build finished."
-
+          
+      - name: Get datetime
+        id: datetime
+        run: |
+          echo "tag=$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_OUTPUT
+        
       - name: Upload firmware to Release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.event.created_at | date('YYYY-MM-DD') }}
+          tag_name: ${{ steps.datetime.outputs.tag }}
           files: "bin/targets/**/*.bin"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
 
