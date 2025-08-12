@@ -80,7 +80,7 @@ jobs:
       - name: Get datetime
         id: datetime
         run: |
-          echo "tag=$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_OUTPUT
+          echo "tag=$(TZ=Asia/Shanghai date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_OUTPUT
         
       - name: Upload firmware to Release
         uses: softprops/action-gh-release@v1
