@@ -30,6 +30,7 @@ jobs:
           fetch-depth: 1
           ref: ${{ github.ref }}
 
+      # 缓存 dl
       - name: Cache dl directory
         uses: actions/cache@v3
         with:
@@ -38,13 +39,14 @@ jobs:
           restore-keys: |
             dl-${{ runner.os }}-
 
-      - name: Cache build_dir
+      # 只缓存 build_dir 里的工具链，避免源码变动导致冲突
+      - name: Cache toolchain
         uses: actions/cache@v3
         with:
-          path: build_dir
-          key: build_dir-${{ runner.os }}-${{ hashFiles('config/myconfig') }}
+          path: build_dir/toolchain
+          key: toolchain-${{ runner.os }}-${{ hashFiles('config/myconfig') }}
           restore-keys: |
-            build_dir-${{ runner.os }}-
+            toolchain-${{ runner.os }}-
 
       - name: Install build dependencies
         run: |
@@ -74,7 +76,8 @@ jobs:
           make defconfig
           sed -i "s/192.168.1.1/192.168.5.1/g" package/base-files/files/bin/config_generate
           make download -j$(nproc)
-          make V=s
+          make toolchain/install -j$(nproc)  # 先构建工具链
+          make -j$(nproc) V=s                # 再编译固件
           echo "Build finished."
           
       - name: Get datetime
@@ -89,6 +92,3 @@ jobs:
           files: "bin/targets/**/*.bin"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
-
