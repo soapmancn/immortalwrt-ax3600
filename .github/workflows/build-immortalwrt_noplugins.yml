@@ -1,4 +1,4 @@
-name: build-immortalwrt
+name: build-immortalwrt-noplugins
 
 on:
   workflow_dispatch:
