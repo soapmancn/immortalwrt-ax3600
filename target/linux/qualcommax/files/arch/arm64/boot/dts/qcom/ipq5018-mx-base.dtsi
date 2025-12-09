@@ -80,14 +80,8 @@
 	pinctrl-0 = <&qpic_pins>;
 	pinctrl-names = "default";
 
-	partitions {
-		status = "disabled";
-	};
-
 	nand@0 {
 		compatible = "spi-nand";
-		#address-cells = <1>;
-		#size-cells = <1>;
 		reg = <0>;
 
 		nand-ecc-engine = <&qpic_nand>;
